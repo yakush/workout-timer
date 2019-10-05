@@ -1,7 +1,11 @@
 <script>
+  import NoSleep from "nosleep.js";
   import { onMount } from "svelte";
   import Timer from "./comps/Timer.svelte";
   export let name;
+
+  const noSleep = new NoSleep();
+
   let timers = [
     { name: "a", component: null },
     { name: "b", component: null },
@@ -20,10 +24,27 @@
     currentIdx = 0;
   });
 
+  function wakeLock(enable) {
+    if (enable) {
+      noSleep.enable();
+      console.log("wake lock started");
+    } else {
+      noSleep.disable();
+      console.log("wake lock stopped");
+    }
+  }
+
+  function startTimer() {
+    wakeLock(true);
+    playNext();
+  }
+
   function playNext() {
     timers[currentIdx].component.start();
   }
+
   function resetAll() {
+    wakeLock(false);
     timers.forEach(x => x.component.reset());
     currentIdx = 0;
   }
@@ -32,6 +53,8 @@
     currentIdx = (currentIdx + 1) % timers.length;
     if (autoAdvance && index != timers.length - 1) {
       playNext();
+    } else {
+      wakeLock(false);
     }
   }
 
@@ -95,9 +118,9 @@
     grid-template: "a a";
     grid-gap: 5px;
   }
-  .settings>input[type="number"]{
+  .settings > input[type="number"] {
     width: 100%;
-  }  
+  }
 </style>
 
 <div class="wrap">
@@ -144,6 +167,6 @@
     </div>
   {/each}
 
-  <button class="start" on:click={playNext}>{labelStart}</button>
+  <button class="start" on:click={startTimer}>{labelStart}</button>
 
 </div>
